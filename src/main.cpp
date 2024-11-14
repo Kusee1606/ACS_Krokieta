@@ -5,10 +5,9 @@
 
 #define MPU_ADDR 0x68
 #define SD_CS_PIN 5
-#define INT_PIN 4
-
+#define SAMPLING_PERIOD 0.02
 const String filename = "/Lot_";
-int16_t aX, aY, aZ, gX, gY, gZ;
+int16_t aX, aY, aZ, gX, gY, gZ, fX, fY, fZ;
 long eX = 0, eY = 0, eZ = 0;
 float roll, pitch, yaw;
 float gRoll, gPitch;
@@ -18,10 +17,12 @@ uint32_t masterLoopIteration = 0;
 File logFile;
 int filenumber = 1;
 
-void updateSensorData();
+void updateAccelData();
+void updateGyroData();
 void gyroError(int testCount);
 void getRollPitch(float *roll, float *pitch);
-void upgradeAngles(float period);
+void updateAngles();
+uint16_t fifoCount();
 void logData();
 
 void setup()
@@ -30,17 +31,36 @@ void setup()
   Serial.begin(115200);
   Wire.begin();
   SD.begin(SD_CS_PIN);
-  pinMode(INT_PIN, INPUT);
 
-  // Konfugarcja IMU
+  // Reset rejestrów MPU
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(0x6B);
   Wire.write(0x00);
   Wire.endTransmission(true);
+  // Ustawienie rozdzielczości żyroskopa
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(0x1B);
   Wire.write(0x08);
   Wire.endTransmission(true);
+  // Ustawienie Filtrowania
+  Wire.beginTransmission(MPU_ADDR);
+  Wire.write(0x1A);
+  Wire.write(0x04);
+  Wire.endTransmission(true);
+  // Ustawienie FIFO
+  Wire.beginTransmission(MPU_ADDR);
+  Wire.write(0x19);
+  Wire.write(0x13);
+  Wire.endTransmission(true);
+  Wire.beginTransmission(MPU_ADDR);
+  Wire.write(0x23);
+  Wire.write(0x70);
+  Wire.endTransmission(true);
+  Wire.beginTransmission(MPU_ADDR);
+  Wire.write(0x6A);
+  Wire.write(0x40);
+  Wire.endTransmission(true);
+
   // inicjalizacja pliku
   while (SD.exists(filename + filenumber + ".txt"))
     filenumber++;
@@ -53,7 +73,7 @@ void setup()
   logFile = SD.open(filename + filenumber + ".txt", FILE_APPEND);
   logFile.printf("X Error: %d Y Error: %d Z Error: %d\n", eX, eY, eZ);
   logFile.close();
-  updateSensorData();
+  updateAccelData();
   getRollPitch(&gRoll, &gPitch);
   roll = gRoll;
   pitch = gPitch;
@@ -61,23 +81,19 @@ void setup()
   logData();
 }
 
-unsigned long lastTime = 0;
-unsigned long currentTime = 0;
 
 void loop()
 {
-  currentTime = millis();
   masterLoopIteration++;
-  updateSensorData();
+  updateAccelData();
   getRollPitch(&aRoll, &aPitch);
-  upgradeAngles(currentTime - lastTime);
-  lastTime = currentTime;
+  updateGyroData();
+  updateAngles();
   logData();
   Serial.printf("Accel Roll: %f Accel Pitch: %f Roll: %f Pitch: %f Yaw: %f\n", aRoll, aPitch, roll, pitch, yaw);
 }
 
-// Funkcja pobiera dane
-void updateSensorData()
+void updateAccelData()
 {
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(0x3B);
@@ -86,7 +102,10 @@ void updateSensorData()
   aX = (Wire.read() << 8) | Wire.read();
   aY = (Wire.read() << 8) | Wire.read();
   aZ = (Wire.read() << 8) | Wire.read();
+}
 
+void updateGyroData()
+{
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(0x3B);
   Wire.endTransmission();
@@ -105,11 +124,11 @@ void gyroError(int testCount)
 {
   for (int i = 0; i < testCount; i++)
   {
-    updateSensorData();
-    eX += aX;
-    eY += aY;
-    eZ += aZ;
-    delay(1);
+    updateGyroData();
+    eX += gX;
+    eY += gY;
+    eZ += gZ;
+    delay(20);
   }
   eX /= testCount;
   eY /= testCount;
@@ -127,12 +146,57 @@ void getRollPitch(float *roll, float *pitch)
   }
 }
 
-void upgradeAngles(float period)
+void updateAngles()
 {
-  period /= 1000;
-  roll += (gX / 65.5) * period;
-  pitch += (gY /65.5) * period;
-  yaw += (gZ / 65.5) * period;
+
+  while (fifoCount())
+  {
+    Wire.beginTransmission(MPU_ADDR);
+    Wire.write(0x74);
+    Wire.endTransmission();
+    Wire.requestFrom(MPU_ADDR, 1, 1);
+    fX = Wire.read() << 8;
+    Wire.beginTransmission(MPU_ADDR);
+    Wire.write(0x74);
+    Wire.endTransmission();
+    Wire.requestFrom(MPU_ADDR, 1, 1);
+    fX |= Wire.read();
+
+    Wire.beginTransmission(MPU_ADDR);
+    Wire.write(0x74);
+    Wire.endTransmission();
+    Wire.requestFrom(MPU_ADDR, 1, 1);
+    fY = Wire.read() << 8;
+    Wire.beginTransmission(MPU_ADDR);
+    Wire.write(0x74);
+    Wire.endTransmission();
+    Wire.requestFrom(MPU_ADDR, 1, 1);
+    fY |= Wire.read();
+
+    Wire.beginTransmission(MPU_ADDR);
+    Wire.write(0x74);
+    Wire.endTransmission();
+    Wire.requestFrom(MPU_ADDR, 1, 1);
+    fZ = Wire.read() << 8;
+    Wire.beginTransmission(MPU_ADDR);
+    Wire.write(0x74);
+    Wire.endTransmission();
+    Wire.requestFrom(MPU_ADDR, 1, 1);
+    fZ |= Wire.read();
+
+    roll += (fX / 65.5) * SAMPLING_PERIOD;
+    pitch += (fY / 65.5) * SAMPLING_PERIOD;
+    yaw += (fZ / 65.5) * SAMPLING_PERIOD;
+  }
+}
+
+uint16_t fifoCount()
+{
+  Wire.beginTransmission(MPU_ADDR);
+  Wire.write(0x72);
+  Wire.endTransmission();
+  Wire.requestFrom(MPU_ADDR, 2, 1);
+  return ((Wire.read() << 8) | Wire.read());
 }
 
 void logData()
