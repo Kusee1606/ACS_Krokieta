@@ -8,5 +8,5 @@ Zgodnie z ideą zadania jest to rozwiązanie bardzo uproszczonę, a poniżej zna
 - Zmiany miejsca zapisu logów na np. pamięć flash (Przeciążenia mogą nie działać dobrze z krtą sd)
 - Dodanie możliwości konfiguracji przez np. bluetooth
 - Rozdzielenie kodu na dwa rdzenie mikrokontrolela tak aby jeden był odpowiedzialny za sterowanie rakietą logowanie danych itp a drugi za odczyt danych i wyliczenie aktualnej pozycji
-- zapewnie wiele innych rzeczy które teraz nie przychodzą mi do głowy
 - dodanie działającej kalibraci 
+- zapewnie wiele innych rzeczy które teraz nie przychodzą mi do głowy
