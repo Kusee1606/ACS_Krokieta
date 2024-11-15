@@ -9,6 +9,4 @@ Zgodnie z ideą zadania jest to rozwiązanie bardzo uproszczonę i poniżej znaj
 - Dodanie możliwości konfiguracji przez np. bluetooth
 - Rozdzielenie kodu na dwa rdzenie mikrokontrolela tak aby jeden był odpowiedzialny za sterowanie rakietą logowanie danych itp a drugi za odczyt danych i wyliczenie aktualnej pozycji
 - zapewnie wiele innych rzeczy które teraz nie przychodzą mi do głowy
-
-W skrócie wydaję mi się że udało mi się zrealizować założenia zadania i dlatego wielu wyżej wyminonych rzezczy nie dodałem, ale też uczciwie przyznam że póki co brakuje mi wiedzy by zaimplementować
-bardziej złożone algorytmy mateatyczne (Dopiero zaczynam się zapozanawać z wektormi w trzech wymiearach, taransformacją liniową, teorią sterowania i tym podobnymi).
+- dodanie działającej kalibraci 
