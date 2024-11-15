@@ -2,26 +2,34 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
+#include <ESP32Servo.h>
 
 #define MPU_ADDR 0x68
 #define SD_CS_PIN 5
 #define SAMPLING_PERIOD 0.02
 const String filename = "/Lot_";
 int16_t aX, aY, aZ, gX, gY, gZ, fX, fY, fZ;
+int x1T = 90, x2T = 90, y1T = 90, y2T = 90;
 float eX = 0, eY = 0, eZ = 0;
 float roll, pitch, yaw;
 float gRoll, gPitch;
 float aRoll, aPitch;
-
 uint32_t masterLoopIteration = 0;
-File logFile;
 int filenumber = 1;
+
+File logFile;
+
+Servo servoX1;
+Servo servoX2;
+Servo servoY1;
+Servo servoY2;
 
 void updateAccelData();
 void updateGyroData();
 void gyroError(int testCount);
 void getRollPitch(float *roll, float *pitch);
 void updateAngles(bool Offset);
+void updateServo();
 uint16_t fifoCount();
 void logData();
 
@@ -31,6 +39,14 @@ void setup()
   Serial.begin(115200);
   Wire.begin();
   SD.begin(SD_CS_PIN);
+  servoX1.attach(13);
+  servoX2.attach(12);
+  servoY1.attach(14);
+  servoY2.attach(27);
+  servoX1.write(x1T);
+  servoX2.write(x2T);
+  servoY1.write(y1T);
+  servoY2.write(y2T);
 
   // Reset rejestrów MPU
   Wire.beginTransmission(MPU_ADDR);
@@ -70,6 +86,16 @@ void setup()
 
   // Wylicznie 'dryfu' żyroskopa oraz wczytanie pozycji początkowej
   gyroError(100);
+
+  servoX1.write(80);
+  servoX2.write(80);
+  servoY1.write(80);
+  servoY2.write(80);
+  servoX1.write(100);
+  servoX2.write(100);
+  servoY1.write(100);
+  servoY2.write(100);
+
   logFile = SD.open(filename + filenumber + ".txt", FILE_APPEND);
   logFile.printf("X Error: %d Y Error: %d Z Error: %d\n", eX, eY, eZ);
   logFile.close();
@@ -88,6 +114,7 @@ void loop()
   getRollPitch(&aRoll, &aPitch);
   updateGyroData();
   updateAngles(true);
+  updateServo();
   logData();
   Serial.printf("Accel Roll: %f Accel Pitch: %f Roll: %f Pitch: %f Yaw: %f\n", aRoll, aPitch, roll, pitch, yaw);
 }
@@ -201,6 +228,33 @@ void updateAngles(bool Offset)
       yaw -= eZ;
     }
   }
+}
+
+void updateServo()
+{
+  x1T = map(pitch, -180, 180, 10, 170);
+  x2T = map(pitch, -180, 180, 170, 10);
+  y1T = map(roll, -180, 180, 170, 10);
+  y2T = map(roll, -180, 180, 10, 170);
+  if (yaw > 10)
+  {
+    x1T += 10; 
+    x2T += 10; 
+    y1T += 10; 
+    y2T += 10; 
+  }
+  else if (yaw < -10)
+  {
+    x1T -= 10;
+    x2T -= 10;
+    y1T -= 10;
+    y2T -= 10;
+  }
+
+  servoX1.write(x1T);
+  servoX2.write(x2T);
+  servoY1.write(y1T);
+  servoY2.write(y2T);
 }
 
 uint16_t fifoCount()
