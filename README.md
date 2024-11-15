@@ -1,7 +1,7 @@
 Repozetorium zawiera odpowiedź na zadanie rekrutycyjne z działu ACS
 ![image](https://github.com/user-attachments/assets/7df72401-673d-477a-aeac-386d5f6a7523)
 
-Zgodnie z ideą zadania jest to rozwiązanie bardzo uproszczonę i poniżej znajduję się lista rzeczy które w pełnej implementacji powinny się zmienić:
+Zgodnie z ideą zadania jest to rozwiązanie bardzo uproszczonę, a poniżej znajduję się lista rzeczy które w pełnej implementacji powinny się zmienić:
 - Użycie lepszego IMU (https://bps-space.github.io/electronics/imu-selection.html) i dodanie innych czujników np. gps lub barometru
 - inplementacja algerytmów do syntezy danych z różnych czujników oraz algolitmów filtrowania danych np. filtru Kalemana
 - implementacja regulatorów pid do sterowania serw oraz innych bardziej zawansowanych obliczeń do sterowania ich wychyleniem
