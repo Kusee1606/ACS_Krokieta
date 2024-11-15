@@ -238,10 +238,10 @@ void updateServo()
   y2T = map(roll, -180, 180, 10, 170);
   if (yaw > 10)
   {
-    x1T += 10; 
-    x2T += 10; 
-    y1T += 10; 
-    y2T += 10; 
+    x1T += 10;
+    x2T += 10;
+    y1T += 10;
+    y2T += 10;
   }
   else if (yaw < -10)
   {
@@ -269,6 +269,6 @@ uint16_t fifoCount()
 void logData()
 {
   logFile = SD.open(filename + filenumber + ".txt", FILE_APPEND);
-  logFile.printf("I: %lu T: %lu aX: %d aY: %d aZ: %d gX: %d gY: %d gZ: %d Accel Roll: %f Accel Pitch: %f Roll: %f Pitch: %f Yaw: %f\n", masterLoopIteration, millis(), aX, aY, aZ, gX, gY, gZ, aRoll, aPitch, roll, pitch, yaw);
+  logFile.printf("I: %lu T: %lu aX: %d aY: %d aZ: %d gX: %d gY: %d gZ: %d Accel Roll: %f Accel Pitch: %f Roll: %f Pitch: %f Yaw: %f x1T: %d x2T: %d y1T: %d y2T: %d\n", masterLoopIteration, millis(), aX, aY, aZ, gX, gY, gZ, aRoll, aPitch, roll, pitch, yaw, x1T, x2T, y1T, y2T);
   logFile.close();
 }
