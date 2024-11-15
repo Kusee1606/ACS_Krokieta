@@ -10,3 +10,14 @@ Zgodnie z ideą zadania jest to rozwiązanie bardzo uproszczonę, a poniżej zna
 - Rozdzielenie kodu na dwa rdzenie mikrokontrolela tak aby jeden był odpowiedzialny za sterowanie rakietą logowanie danych itp a drugi za odczyt danych i wyliczenie aktualnej pozycji
 - dodanie działającej kalibraci 
 - zapewnie wiele innych rzeczy które teraz nie przychodzą mi do głowy
+
+
+Filmiki i zdjęcia z działania:
+
+Zapisane pliki na karcie sd:
+![image](https://github.com/user-attachments/assets/35dd1001-6334-4aca-8c3d-3df96a648aab)
+![image](https://github.com/user-attachments/assets/919ad413-85b1-4b3c-ba53-108291b8b107)
+![image](https://github.com/user-attachments/assets/a851bbb2-074d-489f-a829-1207d03481bb)
+
+Film z działania:
+https://youtube.com/shorts/JlnNa-HZ_lY
