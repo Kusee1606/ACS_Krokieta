@@ -8,7 +8,7 @@
 #define SAMPLING_PERIOD 0.02
 const String filename = "/Lot_";
 int16_t aX, aY, aZ, gX, gY, gZ, fX, fY, fZ;
-long eX = 0, eY = 0, eZ = 0;
+float eX = 0, eY = 0, eZ = 0;
 float roll, pitch, yaw;
 float gRoll, gPitch;
 float aRoll, aPitch;
@@ -21,7 +21,7 @@ void updateAccelData();
 void updateGyroData();
 void gyroError(int testCount);
 void getRollPitch(float *roll, float *pitch);
-void updateAngles();
+void updateAngles(bool Offset);
 uint16_t fifoCount();
 void logData();
 
@@ -81,14 +81,13 @@ void setup()
   logData();
 }
 
-
 void loop()
 {
   masterLoopIteration++;
   updateAccelData();
   getRollPitch(&aRoll, &aPitch);
   updateGyroData();
-  updateAngles();
+  updateAngles(true);
   logData();
   Serial.printf("Accel Roll: %f Accel Pitch: %f Roll: %f Pitch: %f Yaw: %f\n", aRoll, aPitch, roll, pitch, yaw);
 }
@@ -122,13 +121,21 @@ void updateGyroData()
 // Funcja wylicza średnie watości odczytów z żyroskopu który powinien znajodwać w stanie spoczynk
 void gyroError(int testCount)
 {
+  updateAngles(false);
+  roll = 0;
+  pitch = 0;
+  yaw = 0;
   for (int i = 0; i < testCount; i++)
   {
-    updateGyroData();
-    eX += gX;
-    eY += gY;
-    eZ += gZ;
-    delay(20);
+    while (!fifoCount())
+      ;
+    updateAngles(false);
+    eX += roll;
+    eY += pitch;
+    eZ += yaw;
+    roll = 0;
+    pitch = 0;
+    yaw = 0;
   }
   eX /= testCount;
   eY /= testCount;
@@ -146,7 +153,7 @@ void getRollPitch(float *roll, float *pitch)
   }
 }
 
-void updateAngles()
+void updateAngles(bool Offset)
 {
 
   while (fifoCount())
@@ -187,6 +194,12 @@ void updateAngles()
     roll += (fX / 65.5) * SAMPLING_PERIOD;
     pitch += (fY / 65.5) * SAMPLING_PERIOD;
     yaw += (fZ / 65.5) * SAMPLING_PERIOD;
+    if (Offset)
+    {
+      roll -= eX;
+      pitch -= eY;
+      yaw -= eZ;
+    }
   }
 }
 
